@@ -1,0 +1,127 @@
+﻿<html class="dj_webkit dj_chrome dj_contentbox"><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+  <title>Polygon Area and Perimeter</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/3.39/esri/css/esri.css">
+  <script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/esri/nls/jsapi_en-us.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/dojox/gfx/svg.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/esri/tasks/AreasAndLengthsParameters.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/esri/toolbars/draw.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/esri/toolbars/_toolbar.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/dojox/gfx/filters.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/dojox/gfx/svgext.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/esri/layers/VectorTileLayer.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/esri/layers/VectorTileLayerImpl.js"></script><script type="text/javascript" charset="utf-8" src="https://js.arcgis.com/3.39/esri/layers/nls/VectorTileLayerImpl_en-us.js"></script><script src="https://js.arcgis.com/3.39/"></script>
+  <style>
+    html, body, #mapDiv {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      width: 95%;
+    }
+    #info {
+      bottom: 20px;
+      color: rgb(73, 172, 45);
+      height: auto;
+      font-family: arial;
+      left: 20px;
+      margin: 5px;
+      padding: 10px;
+      position: absolute;
+      text-align: left;
+      width: 200px;
+      z-index: 40;
+    }
+    .label {
+      display: inline-block;
+      width: 4em;
+    }
+  </style>
+
+  
+  <script>
+    require(["dojo/dom",
+          "dojo/_base/lang",
+          "dojo/json",
+          "esri/config",
+          "esri/map",
+          "esri/graphic",
+          "esri/geometry/Geometry",
+          "esri/geometry/Extent",
+          "esri/SpatialReference",
+          "esri/tasks/GeometryService",
+          "esri/tasks/AreasAndLengthsParameters",
+          "esri/toolbars/draw",
+          "esri/symbols/SimpleFillSymbol"],
+    function(dom, lang, json, esriConfig, Map, Graphic, Geometry, Extent, SpatialReference, GeometryService, AreasAndLengthsParameters, Draw, SimpleFillSymbol){
+
+      esriConfig.defaults.io.proxyUrl = "/proxy/";
+      esriConfig.defaults.io.alwaysUseProxy = false;
+
+      var map = new Map("mapDiv", {
+        basemap: "topo-vector",
+        center: [-122.778, 45.483],
+        zoom: 15
+      });
+
+      map.on("load", function() {
+        var tb = new Draw(map);
+        tb.on("draw-end", lang.hitch(map, getAreaAndLength));
+        tb.activate(Draw.FREEHAND_POLYGON);
+      });
+
+      var geometryService = new GeometryService("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer");
+      geometryService.on("areas-and-lengths-complete", outputAreaAndLength);
+
+    function getAreaAndLength(evtObj) {
+      var map = this,
+          geometry = evtObj.geometry;
+      map.graphics.clear();
+
+      var graphic = map.graphics.add(new Graphic(geometry, new SimpleFillSymbol()));
+
+      //setup the parameters for the areas and lengths operation
+      var areasAndLengthParams = new AreasAndLengthsParameters();
+      areasAndLengthParams.lengthUnit = GeometryService.UNIT_METERS;
+      areasAndLengthParams.areaUnit = GeometryService.UNIT_ACRES;
+      areasAndLengthParams.calculationType = "geodesic";
+      geometryService.simplify([geometry], function(simplifiedGeometries) {
+        areasAndLengthParams.polygons = simplifiedGeometries;
+        geometryService.areasAndLengths(areasAndLengthParams);
+      });
+    }
+
+    function outputAreaAndLength(evtObj) {
+      var result = evtObj.result;
+      console.log(json.stringify(result));
+      dom.byId("area").innerHTML = result.areas[0].toFixed(3) + " acres";
+      dom.byId("length").innerHTML = result.lengths[0].toFixed(3) + " meters";
+    }
+  });
+  </script>
+
+  </head>
+  <body>
+    <div id="mapDiv" class="map" data-basemap="topo-vector" data-zoom="15" data-scale="18055.954822" data-loaded=""><div id="mapDiv_root" class="esriMapContainer" style="width: 622px; height: 520px; direction: ltr;"><div id="mapDiv_container" class="esriMapContainer" style="position: absolute; cursor: default; touch-action: none; clip: auto;"><div id="mapDiv_layers" class="esriMapLayers"><div id="mapDiv_layer0" style="position: absolute; width: 622px; height: 520px; overflow: visible; transform: translate(0px, 0px); display: block;"><div style="position: absolute; width: 622px; height: 520px; overflow: visible; transition: -webkit-transform 500ms ease 0s;"><img id="mapDiv_layer0_tile_15_0_0" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(-84px, -4px);" src="https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11724/5206"><img id="mapDiv_layer0_tile_15_1_0" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(-84px, 252px);" src="https://server.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11725/5206"><img id="mapDiv_layer0_tile_15_2_0" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(-84px, 508px);" src="https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11726/5206"><img id="mapDiv_layer0_tile_15_0_1" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(172px, -4px);" src="https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11724/5207"><img id="mapDiv_layer0_tile_15_1_1" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(172px, 252px);" src="https://server.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11725/5207"><img id="mapDiv_layer0_tile_15_2_1" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(172px, 508px);" src="https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11726/5207"><img id="mapDiv_layer0_tile_15_0_2" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(428px, -4px);" src="https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11724/5208"><img id="mapDiv_layer0_tile_15_1_2" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(428px, 252px);" src="https://server.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11725/5208"><img id="mapDiv_layer0_tile_15_2_2" alt="" class="layerTile" style="width: 256px; height: 256px; visibility: inherit; transform: translate(428px, 508px);" src="https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/15/11726/5208"></div></div><div data-vectortiles="true" id="mapDiv_layer1" style="position: absolute; width: 622px; height: 520px; overflow: visible; opacity: 1; display: block;"><canvas class="esri-display-object" width="933" height="780" style="width: 622px; height: 520px; display: block; opacity: 1;"></canvas></div><svg overflow="hidden" width="622" height="520" id="mapDiv_gc" style="touch-action: none; will-change: transform; overflow: visible; position: absolute;"><defs></defs><g id="mapDiv_graphics_layer" style="display: block;"><g></g></g></svg></div></div><div class="esriControlsBR"><span class="esriAttribution" style="max-width: 279px; cursor: pointer;" tabindex="0"><span class="esriAttributionList"><span class="esriAttributionItem" style="display: inline;">Esri, NASA, NGA, USGS, FEMA<span class="esriAttributionDelim"> | </span></span><span class="esriAttributionLastItem" style="display: inline;">Esri Community Maps Contributors, Oregon Metro, State of Oregon GEO, © OpenStreetMap, Microsoft, Esri Canada, Esri, HERE, Garmin, SafeGraph, INCREMENT P, METI/NASA, USGS, Bureau of Land Management, EPA, NPS, US Census Bureau, USDA<span class="esriAttributionDelim"> | </span></span></span></span><div tabindex="0" title="Esri" class="logo-med"></div></div><div class="esriPopup esriPopupHidden" style="z-index: 40;"><div class="esriPopupWrapper" style="position: absolute;"><div class="sizer"><div class="titlePane"><div class="spinner hidden" title="Searching..."></div><div class="title"></div><div class="titleButton prev hidden" title="Previous feature"></div><div class="titleButton next hidden" title="Next feature"></div><div class="titleButton maximize" title="Maximize"></div><div class="titleButton close" title="Close"></div></div></div><div class="sizer content"><div class="contentPane"></div></div><div class="sizer"><div class="actionsPane"><div class="actionList hidden"><a title="Zoom to" class="action zoomTo" href="javascript:void(0);"><span>Zoom to</span></a></div></div></div><div class="pointer hidden"></div></div><div class="outerPointer hidden"></div></div><div id="mapDiv_zoom_slider" class="esriSimpleSlider esriSimpleSliderVertical esriSimpleSliderTL" style="z-index: 30;"><div class="esriSimpleSliderIncrementButton" tabindex="0" role="button" title="Zoom In"><span aria-hidden="true" role="presentation">+</span><span class="esriIconFallbackText">Zoom In</span></div><div class="esriSimpleSliderDecrementButton" tabindex="0" role="button" title="Zoom Out"><span aria-hidden="true" role="presentation">−</span><span class="esriIconFallbackText">Zoom Out</span></div></div></div><div class="esriMapTooltip" style="display: none; position: fixed;">Press down to start and let go to finish</div></div>
+    <div id="info" class="esriSimpleSlider">
+      Draw a polygon to be used as input to the geometryService's areasAndLengths() operation.
+      <br><br>
+      <span class="label">Area:</span> <span id="area"></span>
+      <br>
+      <span class="label">Length:</span> <span id="length"></span>
+    </div>
+  
+
+
+ 
+<script>mendeleyWebImporter = {
+  downloadPdfs(e,t) { return this._call('downloadPdfs', [e,t]); },
+  open() { return this._call('open', []); },
+  setLoginToken(e) { return this._call('setLoginToken', [e]); },
+  _call(methodName, methodArgs) {
+    const id = Math.random();
+    window.postMessage({ id, token: '0.5678580113469811', methodName, methodArgs }, 'https://dawoodskym.github.io');
+    return new Promise(resolve => {
+      const listener = window.addEventListener('message', event => {
+        const data = event.data;
+        if (typeof data !== 'object' || !('result' in data) || data.id !== id) return;
+        window.removeEventListener('message', listener);
+        resolve(data.result);
+      });
+    });
+  }
+};</script></body></html>
